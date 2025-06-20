@@ -1,0 +1,6 @@
+name = input("What is your name: ")
+sales = int(input("what is your sales for this month: "))
+#sales = int(sales)
+incentives = round((sales * 13 / 100), 2)
+#incentives = round(incentives)
+print(f"Congratualation {name}, you have won Rs {incentives}/- towards you sales amount {sales}")
