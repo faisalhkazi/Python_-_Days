@@ -1,0 +1,189 @@
+import os  # For checking if files or folders exist
+from pathlib import Path  # For working with paths in an object-oriented way
+from os import system  # For clearing the console screen (Windows)
+
+# Set the path where all categories and recipes are stored
+my_path = Path("D:/Learning/Day6/Recipes")  # Base folder for recipe files
+
+# Count how many .txt recipe files are in the entire folder structure
+def count_recipes(path):
+    counter = 0  # Initialize recipe counter to 0
+    for txt in Path(path).glob("**/*.txt"):  # Search all .txt files recursively
+        counter += 1  # Increment the counter for each file found
+    return counter  # Return total number of recipes
+
+# Show the start menu and get user's option
+def start():
+    system("cls")  # Clear the console screen (works only on Windows)
+    print("*" * 50)  # Print decorative line
+    print("*" * 8 + " Welcome to the recipe administrator " + "*" * 7)  # Welcome message
+    print("*" * 50)  # Print decorative line
+    print("\n")  # Print a blank line
+    print(f"The recipes are in: {my_path}")  # Show the base folder path
+    print(f"Total recipes: {count_recipes(my_path)}")  # Show total recipe count
+
+    menu_choice = 'x'  # Initialize user choice as invalid
+    while not menu_choice.isnumeric() or int(menu_choice) not in range(1, 7):  # Validate input
+        print("\nChoose an option:")  # Ask user to choose
+        print('''
+        [1] - Read a recipe
+        [2] - Create a new recipe
+        [3] - Create a new category
+        [4] - Delete a recipe
+        [5] - Delete a category
+        [6] - Exit the program
+        ''')
+        menu_choice = input("Enter your choice: ")  # Get user input
+
+    return int(menu_choice)  # Return validated choice as an integer
+
+# Show list of recipe categories (folders)
+def show_categories(path):
+    print("\nCategories:")  # Heading
+    categories_list = []  # To store found category paths
+    counter = 1  # Counter for display
+
+    for folder in Path(path).iterdir():  # Loop over items in the directory
+        if folder.is_dir():  # Only consider folders
+            print(f"[{counter}] - {folder.name}")  # Show folder name with number
+            categories_list.append(folder)  # Add folder to the list
+            counter += 1  # Increase the number
+
+    return categories_list  # Return the list of category folders
+
+# Ask user to select a category from list
+def choose_categories(a_list):
+    correct_choice = 'x'  # Start with invalid choice
+    while not correct_choice.isnumeric() or int(correct_choice) not in range(1, len(a_list) + 1):  # Validate
+        correct_choice = input("\nChoose a category number: ")  # Get input
+
+    return a_list[int(correct_choice) - 1]  # Return the selected category
+
+# Show all recipes in the selected category
+def show_recipes(path):
+    print("\nRecipes in this category:")  # Heading
+    recipes_list = []  # List to store found recipe files
+    counter = 1  # Start counting
+
+    for recipe in Path(path).glob("*.txt"):  # Look for .txt files only
+        print(f"[{counter}] - {recipe.name}")  # Print the recipe name with number
+        recipes_list.append(recipe)  # Add to list
+        counter += 1  # Increase number
+
+    return recipes_list  # Return the list of recipe files
+
+# Ask user to choose a recipe from list
+def choose_recipes(a_list):
+    recipe_choice = 'x'  # Invalid start value
+
+    while not recipe_choice.isnumeric() or int(recipe_choice) not in range(1, len(a_list) + 1):  # Validate
+        recipe_choice = input("\nChoose a recipe number: ")  # Get input
+
+    return a_list[int(recipe_choice) - 1]  # Return the selected recipe
+
+# Read and display the contents of a selected recipe
+def read_recipe(recipe):
+    print("\n--- Recipe Content ---\n")  # Title
+    print(recipe.read_text())  # Read and print the recipe file content
+
+# Create a new recipe inside a selected category
+def create_recipe(path):
+    exists = False  # Flag to check if recipe already exists
+
+    while not exists:  # Keep asking until a unique name is given
+        print("Enter the name of your recipe (without .txt): ")  # Ask name
+        recipe_name = input() + ".txt"  # Add .txt to name
+        print("Write your recipe content: ")  # Ask for recipe text
+        recipe_content = input()  # Read recipe content
+        new_path = Path(path, recipe_name)  # Build full path
+
+        if not new_path.exists():  # Check if it doesn't exist
+            new_path.write_text(recipe_content)  # Save recipe to file
+            print(f"✅ Recipe '{recipe_name}' has been created.")  # Confirm
+            exists = True  # Mark as done
+        else:
+            print("❌ A recipe with that name already exists. Try a different name.")  # Warn user
+
+# Create a new category (folder)
+def create_category(path):
+    exists = False  # Track if name is unique
+
+    while not exists:  # Keep trying until valid name is given
+        print("Enter the name of your new category: ")  # Ask user
+        category_name = input()  # Read category name
+        new_path = Path(path, category_name)  # Build full path
+
+        if not new_path.exists():  # If it doesn't already exist
+            new_path.mkdir()  # Create new folder
+            print(f"✅ Category '{category_name}' has been created.")  # Confirm
+            exists = True  # Stop the loop
+        else:
+            print("❌ A category with that name already exists.")  # Warn user
+
+# Delete a selected recipe file
+def delete_recipe(recipe):
+    recipe.unlink()  # Delete the file
+    print(f"🗑️ Recipe '{recipe.name}' has been deleted.")  # Confirm
+
+# Delete a selected category folder
+def delete_category(category):
+    try:
+        category.rmdir()  # Try to remove the folder (must be empty)
+        print(f"🗑️ Category '{category.name}' has been deleted.")  # Confirm
+    except OSError:
+        print("❌ Cannot delete category. Make sure it's empty first.")  # Error if folder isn't empty
+
+# Wait until user presses 'b' to return to the main menu
+def return_beginning():
+    return_choice = 'x'  # Start with invalid
+    while return_choice.lower() != 'b':  # Keep asking until 'b' is entered
+        return_choice = input("\nPress 'b' to return to the main menu: ")  # Prompt user
+
+# ----------- Main Program Loop -----------
+
+finish_program = False  # Set to True when user wants to exit
+
+while not finish_program:  # Run until user exits
+    menu = start()  # Show menu and get choice
+
+    if menu == 1:  # Read recipe
+        my_categories = show_categories(my_path)  # Show available categories
+        my_category = choose_categories(my_categories)  # User picks one
+        my_recipes = show_recipes(my_category)  # Show recipes in category
+        if my_recipes:  # If any recipes exist
+            my_recipe = choose_recipes(my_recipes)  # User picks recipe
+            read_recipe(my_recipe)  # Display recipe content
+        else:
+            print("⚠️ No recipes in this category.")  # Warn if empty
+        return_beginning()  # Wait to go back
+
+    elif menu == 2:  # Create new recipe
+        my_categories = show_categories(my_path)  # Show categories
+        my_category = choose_categories(my_categories)  # Pick one
+        create_recipe(my_category)  # Create a recipe
+        return_beginning()  # Wait to go back
+
+    elif menu == 3:  # Create new category
+        create_category(my_path)  # Create a folder
+        return_beginning()  # Wait to go back
+
+    elif menu == 4:  # Delete recipe
+        my_categories = show_categories(my_path)  # Show categories
+        my_category = choose_categories(my_categories)  # Pick one
+        my_recipes = show_recipes(my_category)  # Show recipes
+        if my_recipes:  # If any recipes exist
+            my_recipe = choose_recipes(my_recipes)  # Pick one
+            delete_recipe(my_recipe)  # Delete it
+        else:
+            print("⚠️ No recipes to delete.")  # Warn
+        return_beginning()  # Wait to go back
+
+    elif menu == 5:  # Delete category
+        my_categories = show_categories(my_path)  # Show categories
+        my_category = choose_categories(my_categories)  # Pick one
+        delete_category(my_category)  # Try deleting folder
+        return_beginning()  # Wait to go back
+
+    elif menu == 6:  # Exit program
+        print("👋 Exiting the Recipe Administrator. Goodbye!")  # Goodbye message
+        finish_program = True  # Break the loop
