@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:11434/api/tags"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  chatbot:
+    build: .
+    container_name: chatbot
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3
+    ports:
+      - "5000:5000"
+
+volumes:
+  ollama_data:

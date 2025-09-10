@@ -1,0 +1,265 @@
+# Chatbot Deployment Steps on Linux (Ubuntu) with Flask + Ollama
+
+Follow these steps carefully to deploy your chatbot on Ubuntu with Docker.
+
+---
+
+## 1. Update System
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+---
+
+## 2. Install Docker
+```bash
+sudo apt install -y docker.io docker-compose
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+Check version:
+```bash
+docker --version
+```
+
+---
+
+## 3. Install Ollama (to run free local models)
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+Start service:
+```bash
+ollama serve
+```
+
+Pull model (example: Llama 3):
+```bash
+ollama pull llama3
+```
+
+Run test:
+```bash
+ollama run llama3
+```
+
+---
+
+## 4. Project Structure
+Create folder:
+```bash
+mkdir chatbot-app && cd chatbot-app
+```
+
+Inside this folder, you should have:
+- `app.py` → Flask backend
+- `templates/index.html` → UI HTML
+- `static/style.css` → CSS styling
+- `Dockerfile` → Container setup
+- `requirements.txt` → Python dependencies
+
+---
+
+## 5. requirements.txt
+```
+Flask
+requests
+```
+
+---
+
+## 6. Flask Backend (app.py)
+```python
+from flask import Flask, render_template, request, jsonify
+import requests
+
+app = Flask(__name__)
+
+def call_model(prompt):
+    try:
+        response = requests.post(
+            "http://ollama:11434/api/generate",
+            json={"model": "llama3", "prompt": prompt},
+            stream=False
+        )
+        data = response.json()
+        return data.get("response", "⚠️ No response from model")
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_message = request.json.get("message")
+    bot_response = call_model(user_message)
+    return jsonify({"reply": bot_response})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
+```
+
+---
+
+## 7. HTML UI (templates/index.html)
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <h2>💬 Chatbot</h2>
+    <div id="chat-box"></div>
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Type a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value;
+      if (!message) return;
+
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += `<p><b>You:</b> ${message}</p>`;
+      input.value = "";
+
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: message})
+      });
+      const data = await response.json();
+      chatBox.innerHTML += `<p><b>Bot:</b> ${data.reply}</p>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 8. CSS Styling (static/style.css)
+```css
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.chat-container {
+  width: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-container h2 {
+  margin: 0;
+  padding: 16px;
+  background: #007BFF;
+  color: white;
+  text-align: center;
+}
+
+#chat-box {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  border-bottom: 1px solid #ddd;
+}
+
+.input-container {
+  display: flex;
+  padding: 12px;
+}
+
+.input-container input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.input-container button {
+  margin-left: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: #007BFF;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+```
+
+---
+
+## 9. Dockerfile
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+```
+
+---
+
+## 10. Build and Run Containers
+
+### Build Flask chatbot:
+```bash
+docker build -t chatbot-app .
+```
+
+### Run Ollama container:
+```bash
+docker run -d --name ollama -p 11434:11434 ollama/ollama
+```
+
+### Pull Llama3 inside Ollama:
+```bash
+docker exec -it ollama ollama pull llama3
+```
+
+### Run chatbot container and link with Ollama:
+```bash
+docker run -d -p 5000:5000 --name chatbot --link ollama:ollama chatbot-app
+```
+
+---
+
+## 11. Test
+Open browser:
+```
+http://localhost:5000
+```
+
+Type a message → the chatbot will reply using Llama 3 (running locally in Ollama).
+
+---

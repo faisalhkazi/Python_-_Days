@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ATM Simulator</title>
+</head>
+<body>
+    <h1>ATM Simulator</h1>
+
+    <h2>Create Customer</h2>
+    <form method="POST">
+        <input type="hidden" name="action" value="create">
+        First Name: <input type="text" name="firstname" required><br>
+        Last Name: <input type="text" name="lastname" required><br>
+        Account Number: <input type="text" name="account_number" required><br>
+        Initial Balance: <input type="number" name="balance" step="0.01" required><br>
+        <button type="submit">Create Account</button>
+    </form>
+
+    {% if customer %}
+    <hr>
+    <h2>ATM Operations</h2>
+
+    <form method="POST">
+        <input type="hidden" name="action" value="deposit">
+        Deposit Amount: <input type="number" name="deposit_amount" step="0.01" required>
+        <button type="submit">Deposit</button>
+    </form>
+
+    <form method="POST">
+        <input type="hidden" name="action" value="withdraw">
+        Withdraw Amount: <input type="number" name="withdraw_amount" step="0.01" required>
+        <button type="submit">Withdraw</button>
+    </form>
+
+    <form method="POST">
+        <input type="hidden" name="action" value="statement">
+        <button type="submit">View Statement</button>
+    </form>
+    {% endif %}
+
+    <hr>
+    <div style="color: green;">
+        {{ message|safe }}
+    </div>
+</body>
+</html>
