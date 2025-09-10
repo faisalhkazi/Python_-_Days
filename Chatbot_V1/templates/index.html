@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Chatbot</title>
+</head>
+<body>
+    <h1>Document Chatbot</h1>
+    <form id="chatForm" enctype="multipart/form-data">
+        <label>Enter your question:</label><br>
+        <input type="text" name="question" id="question" style="width:400px;" required><br><br>
+
+        <label>Upload files (optional):</label><br>
+        <input type="file" name="files" id="files" multiple><br><br>
+
+        <button type="submit">Ask</button>
+    </form>
+
+    <h2>Answer:</h2>
+    <pre id="answer"></pre>
+
+    <script>
+        const form = document.getElementById('chatForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            const response = await fetch('/ask', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            document.getElementById('answer').innerText = data.answer || data.error;
+        });
+    </script>
+</body>
+</html>
