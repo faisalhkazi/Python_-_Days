@@ -1,0 +1,82 @@
+Goal:
+
+Run Ollama in Docker
+
+Use any supported model (llama2, mistral, gemma, etc.)
+
+Call it from your Python code via HTTP (http://localhost:11434)
+
+🧩 Step-by-Step: Run Ollama with Model (No WebUI)
+✅ 1. Pull and Run Ollama Docker Image
+docker run -d --name ollama \
+  -p 11434:11434 \
+  -v ollama:/root/.ollama \
+  ollama/ollama
+
+
+🔹 This starts the Ollama backend server on http://localhost:11434
+
+✅ 2. Pull a Model (like LLaMA2 or Mistral)
+
+To pull a model into the running container:
+
+docker exec -it ollama ollama pull llama2
+
+
+You can replace llama2 with:
+
+mistral
+
+gemma
+
+llama3
+
+codellama
+Full list: https://ollama.com/library
+
+✅ 3. Test the model from host
+
+Now you can send chat/completion requests via Python or curl.
+
+Try this to test from terminal:
+
+curl http://localhost:11434/api/generate -d '{
+  "model": "llama2",
+  "prompt": "Why is the sky blue?",
+  "stream": false
+}'
+
+
+✅ You’ll get back a JSON response with the model’s answer.
+
+🧪 4. Using Ollama from Python
+
+Install the HTTP client:
+
+pip install requests
+
+
+Python example:
+
+import requests
+
+response = requests.post("http://localhost:11434/api/generate", json={
+    "model": "llama2",
+    "prompt": "Explain quantum computing in simple terms.",
+    "stream": False
+})
+
+print(response.json()["response"])
+
+🔁 To Stop or Restart Ollama
+docker stop ollama     # stop
+docker start ollama    # restart
+docker rm -f ollama    # remove
+
+✅ Summary
+Task	Command
+Start Ollama server	docker run -d ... ollama/ollama
+Pull model	docker exec -it ollama ollama pull llama2
+Test API	curl http://localhost:11434/api/generate -d '{...}'
+Use in Python	requests.post(...)
+Docs	https://ollama.com/library
