@@ -1,0 +1,8 @@
+OS: Windows 10 Pro
+System Name: DESKTOP-ARSQRDI
+Laptop Manufacturer: LENOVO
+System Model: 20JNS05Y00
+Processor: Intel(R) Core(TM) i5-6300U CPU @ 2.40GHz, 2496 Mhz, 2 Core(s), 4 Logical Processor(s)
+RAM: 16 GB
+Storage: 477 GB SSD
+Product ID: 00330-51015-76503-AAOEM
